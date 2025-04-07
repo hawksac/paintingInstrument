@@ -1,0 +1,11 @@
+<div class="drum-machine">
+  <div class="row" *ngFor="let pad of pads">
+    <button 
+      *ngFor="let step of grid[pad.key]; let i = index"
+      class="step"
+      [class.active]="grid[pad.key][i]"
+      [class.current]="i === currentStep"
+      (click)="toggleStep(pad.key, i)">
+    </button>
+  </div>
+</div>

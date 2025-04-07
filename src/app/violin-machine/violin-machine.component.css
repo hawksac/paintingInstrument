@@ -1,0 +1,60 @@
+:host {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .violin-machine {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .grid {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  
+  .row {
+    display: flex;
+    border-bottom: 1px solid #333;
+  }
+  
+  .steps {
+    display: flex;
+    flex: 1;
+  }
+  
+  .step {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #222;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+  }
+  
+  .step.active {
+    background-color: #aaf;
+  }
+  
+  .step.current {
+    border-color: #f00;
+  }
+  
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    gap: 10px;
+    background: #eee;
+  }
+  

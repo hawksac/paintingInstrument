@@ -1,0 +1,16 @@
+<div class="violin-machine">
+  <div class="grid">
+    <div class="row" *ngFor="let key of violinKeys">
+      <div class="steps">
+        <button *ngFor="let _ of [].constructor(sequenceLength); let i = index"
+                class="step"
+                [class.active]="grid[key][i]"
+                [class.current]="i === currentStep"
+                (mousedown)="startDrag(key, i)"
+                (mouseenter)="dragToggle(key, i)"
+                (click)="toggleStep(key, i)">
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
