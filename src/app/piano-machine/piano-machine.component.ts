@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,7 +9,10 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './piano-machine.component.html',
   styleUrls: ['./piano-machine.component.css']
 })
-export class PianoMachineComponent implements OnInit {
+export class PianoMachineComponent implements OnInit, AfterViewInit {
+  @ViewChild('pianoCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+  private ctx!: CanvasRenderingContext2D;
+
   pianoKeys: string[] = [];
   grid: { [key: string]: boolean[] } = {};
   audioElements: { [key: string]: HTMLAudioElement } = {};
@@ -20,6 +23,17 @@ export class PianoMachineComponent implements OnInit {
 
   isMouseDown: boolean = false;
   dragSetValue: boolean | null = null;
+  isPainting: boolean = false; // for canvas painting mode
+
+  // For mapping canvas coordinates
+  canvasWidth: number = 0;
+  canvasHeight: number = 0;
+  rowHeight: number = 0;
+  stepWidth: number = 0;
+
+  private drawing = false;
+  private lastX = 0;
+  private lastY = 0;
 
   constructor() {}
 
@@ -29,6 +43,104 @@ export class PianoMachineComponent implements OnInit {
     this.loadSounds();
   }
 
+  ngAfterViewInit(): void {
+    const canvas = this.canvasRef.nativeElement;
+    this.ctx = canvas.getContext('2d')!;
+    this.resizeCanvas();
+    // Attach document-level event listeners for drawing
+    document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), true);
+    document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), true);
+    document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), true);
+
+  }
+  
+
+  @HostListener('window:resize')
+  resizeCanvas(): void {
+    const canvas = this.canvasRef.nativeElement;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    this.canvasWidth = canvas.width;
+    this.canvasHeight = canvas.height;
+    // Calculate the height for each piano key row
+    this.rowHeight = this.canvasHeight / this.pianoKeys.length;
+    // Calculate step width based on the sequence length
+    this.stepWidth = this.canvasWidth / this.sequenceLength;
+    // Clear any previous drawings
+  }
+
+  // clearCanvas(): void {
+  //   this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+  // }
+
+  private isEventOverCanvas(event: MouseEvent, rect: DOMRect): boolean {
+    return (
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+    );
+  }
+  
+  onDocumentMouseDown(event: MouseEvent): void {
+    console.log('Document MOUSE DOWN fired');
+    const canvasRect = this.canvasRef.nativeElement.getBoundingClientRect();
+    console.log('Canvas rect', canvasRect);
+    if (this.isEventOverCanvas(event, canvasRect)) {
+      this.lastX = event.clientX - canvasRect.left;
+      this.lastY = event.clientY - canvasRect.top;
+      this.drawing = true;
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.lastX, this.lastY);
+    }
+  }
+  
+  onDocumentMouseMove(event: MouseEvent): void {
+    console.log('Document MOUSE MOVE fired');
+    if (!this.drawing) {
+      return;
+    }
+    
+    const canvasRect = this.canvasRef.nativeElement.getBoundingClientRect();
+    console.log('Canvas rect', canvasRect);
+    if (!this.isEventOverCanvas(event, canvasRect)) {
+      return;
+    }
+    
+    const currentX = event.clientX - canvasRect.left;
+    const currentY = event.clientY - canvasRect.top;
+    
+    // Calculate which grid cell (row & col) the user is painting over:
+    const col = Math.floor(currentX / this.stepWidth);
+    const row = Math.floor(currentY / this.rowHeight);
+    const key = this.pianoKeys[row];
+    
+    // Toggle or activate the note if it is not already active:
+    if (!this.grid[key][col]) {
+      this.grid[key][col] = true;
+      this.playSound(key);
+    }
+    
+    // Continue with the freehand drawing stroke on the canvas:
+    this.ctx.lineTo(currentX, currentY);
+    this.ctx.strokeStyle = 'rgba(255, 0, 0, 1)';  // Change color as needed
+    this.ctx.lineWidth = 5;  // Change line width if desired
+    this.ctx.stroke();
+    
+    // Update the last known position
+    this.lastX = currentX;
+    this.lastY = currentY;
+  }
+  
+  onDocumentMouseUp(event: MouseEvent): void {
+    console.log('Document MOUSE UP fired');
+    if (this.drawing) {
+      this.drawing = false;
+      this.ctx.closePath();
+    }
+  }  
+
   @HostListener('document:mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     this.isMouseDown = false;
@@ -36,6 +148,7 @@ export class PianoMachineComponent implements OnInit {
   }
 
   generatePianoKeys() {
+    // Using your updated list; note the order here is reversed later.
     this.pianoKeys = [
       'A-1', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6',
       'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7',
@@ -43,6 +156,7 @@ export class PianoMachineComponent implements OnInit {
       'F#0', 'F#1', 'F#2', 'F#3', 'F#4', 'F#5', 'F#6'
     ];
     console.log("Available sample keys:", this.pianoKeys);
+    // Reverse the order so that the highest key is at the top.
     this.pianoKeys.reverse();
   }
 
@@ -54,7 +168,7 @@ export class PianoMachineComponent implements OnInit {
 
   loadSounds() {
     this.pianoKeys.forEach(key => {
-      // Files are located at: assets/piano/sE8s Ped Down Med {key} RR1.wav
+      // Adjust path as needed. For example:
       this.audioElements[key] = new Audio(`assets/piano/sE8s Ped Down Med ${key} RR1.wav`);
     });
   }

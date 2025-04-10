@@ -1,4 +1,5 @@
 <div class="piano-machine">
+  <!-- Piano grid container -->
   <div class="grid">
     <div class="row" *ngFor="let key of pianoKeys">
       <div class="steps">
@@ -13,4 +14,6 @@
       </div>
     </div>
   </div>
+  <!-- Canvas overlay for painting -->
+  <canvas #pianoCanvas class="canvas-overlay"></canvas>
 </div>
