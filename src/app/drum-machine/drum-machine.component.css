@@ -7,8 +7,9 @@
   overflow: hidden;
 }
 
-/* Container fills the screen and arranges rows vertically */
+/* Make the container positioned so we can absolutely position the canvas */
 .drum-machine {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
@@ -29,14 +30,34 @@
   margin: 0;
   padding: 0;
   border: none;
-  background-color: transparent; /* Hidden by default */
+  background-color: transparent;
   cursor: pointer;
   transition: background-color 0.1s ease;
 }
 
 /* When toggled active, the step becomes visible */
 .step.active {
-  background-color: #ffa; /* Change this color to your preferred visible color */
+  background-color: #ffa;
 }
 
-/* Optional: highlight the current step with a subtle border */
+/* Highlight the current step with a subtle border (if desired) */
+.step.current {
+  outline: 1px solid #f00;
+}
+
+/* Canvas overlay covering the entire drum-machine */
+.canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* 
+    pointer-events: none => So the clicks pass through to the buttons 
+    If you want to ONLY draw and not toggle steps with direct clicks, keep pointer-events:none.
+    If you want the canvas to intercept clicks for drawing, pointer-events:all, 
+    but then you’ll lose direct button clicks unless you handle them in code.
+  */
+  pointer-events: none;
+  z-index: 10;
+}

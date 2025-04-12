@@ -2,11 +2,12 @@ import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { DrumMachineComponent } from './drum-machine/drum-machine.component';
 import { PianoMachineComponent } from './piano-machine/piano-machine.component';
 import { ViolinMachineComponent } from './violin-machine/violin-machine.component';
+import { HawksruleMachineComponent } from './hawksrule-machine/hawksrule-machine.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  imports: [DrumMachineComponent, PianoMachineComponent, ViolinMachineComponent],
+  imports: [DrumMachineComponent, PianoMachineComponent, ViolinMachineComponent, HawksruleMachineComponent],
   standalone: true,
   styleUrls: ['./app.component.css']
 })
@@ -20,9 +21,9 @@ export class AppComponent implements AfterViewInit {
   @ViewChild(DrumMachineComponent, { static: true }) drumMachine!: DrumMachineComponent;
   @ViewChild(PianoMachineComponent, { static: true }) pianoMachine!: PianoMachineComponent;
   @ViewChild(ViolinMachineComponent, { static: true }) violinMachine!: ViolinMachineComponent;
+  @ViewChild(HawksruleMachineComponent, { static: true }) hawksruleMachine!: HawksruleMachineComponent;
 
   ngAfterViewInit() {
-    // Child components are ready.
   }
 
   togglePlayback() {
@@ -37,10 +38,12 @@ export class AppComponent implements AfterViewInit {
         this.drumMachine.currentStep = (this.drumMachine.currentStep + 1) % this.drumMachine.sequenceLength;
         this.pianoMachine.currentStep = (this.pianoMachine.currentStep + 1) % this.pianoMachine.sequenceLength;
         this.violinMachine.currentStep = (this.violinMachine.currentStep + 1) % this.violinMachine.sequenceLength;
+        this.hawksruleMachine.currentStep = (this.hawksruleMachine.currentStep + 1) % this.hawksruleMachine.sequenceLength;
         
         this.drumMachine.playCurrentStep();
         this.pianoMachine.playCurrentStep();
         this.violinMachine.playCurrentStep();
+        this.hawksruleMachine.playCurrentStep();
       }, interval);
       this.playing = true;
     }

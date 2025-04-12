@@ -15,17 +15,27 @@
   height: 100%;
 }
 
-/* Grid scrolls horizontally if needed */
 .grid {
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
-/* Each row represents one piano key */
 .row {
   display: flex;
-  /* Remove bottom border to eliminate gridlines */
+  flex: 1; /* Evenly divide height across all keys */
+}
+
+.step {
+  flex: 1; /* Evenly divide width across all steps */
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
 }
 
 /* Container for the steps */
@@ -33,20 +43,6 @@
   display: flex;
   flex: 1;
 }
-
-/* Each step: removed border for a clean look */
-.step {
-  flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  padding: 0;
-  border: none; /* Grid lines removed */
-  background-color: transparent;
-  cursor: pointer;
-  transition: background-color 0.1s ease;
-}
-
 
 /* Highlight the current step */
 .step.current {

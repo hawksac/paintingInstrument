@@ -4,6 +4,7 @@
     <button (click)="selectedInstrument = 'drums'">Drums</button>
     <button (click)="selectedInstrument = 'piano'">Piano</button>
     <button (click)="selectedInstrument = 'violin'">Violin</button>
+    <button (click)="selectedInstrument = 'hawksrule'">Hawksrule</button>
   </div>
   
   <!-- Instrument components (all remain in the DOM; only one is visible) -->
@@ -15,5 +16,8 @@
   </div>
   <div [hidden]="selectedInstrument !== 'violin'">
     <app-violin-machine></app-violin-machine>
+  </div>
+  <div [hidden]="selectedInstrument !== 'hawksrule'">
+    <app-hawksrule-machine></app-hawksrule-machine>
   </div>
   

@@ -168,7 +168,6 @@ export class PianoMachineComponent implements OnInit, AfterViewInit {
 
   loadSounds() {
     this.pianoKeys.forEach(key => {
-      // Adjust path as needed. For example:
       this.audioElements[key] = new Audio(`assets/piano/sE8s Ped Down Med ${key} RR1.wav`);
     });
   }
