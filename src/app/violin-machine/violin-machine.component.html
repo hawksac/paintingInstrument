@@ -1,5 +1,4 @@
 <div class="violin-machine">
-  <canvas #violinCanvas class="canvas-overlay"></canvas>
   <div class="row" *ngFor="let sample of samples; let rowIndex = index">
     <button
       *ngFor="let _ of grid[sample.key]; let colIndex = index"

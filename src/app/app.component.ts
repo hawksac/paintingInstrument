@@ -4,6 +4,9 @@ import { PianoMachineComponent } from './piano-machine/piano-machine.component';
 import { ViolinMachineComponent } from './violin-machine/violin-machine.component';
 import { HawksruleMachineComponent } from './hawksrule-machine/hawksrule-machine.component';
 import { ArpComponent } from './arp/arp.component';
+import { BpmService }   from './bpm.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -15,14 +18,26 @@ import { ArpComponent } from './arp/arp.component';
     PianoMachineComponent,
     ViolinMachineComponent,
     HawksruleMachineComponent,
-    ArpComponent
+    ArpComponent,
+    CommonModule,
+    FormsModule
   ]
 })
 export class AppComponent implements AfterViewInit {
   playing = false;
   selectedInstrument = 'drums';
-  bpm = 120;
   intervalId: any = null;
+  eraserMode = false;
+
+  constructor(public bpmService: BpmService) {}
+
+  /** expose service.bpm for ngModel */
+  get bpm(): number {
+    return this.bpmService.bpm;
+  }
+  set bpm(v: number) {
+    this.bpmService.bpm = v;
+  }
 
   // References to child components
   @ViewChild(DrumMachineComponent, { static: true }) drumMachine!: DrumMachineComponent;
@@ -130,106 +145,99 @@ export class AppComponent implements AfterViewInit {
     );
   }
 
+
+  /** Toggle eraser vs. draw mode */
+  toggleEraser() {
+    this.eraserMode = !this.eraserMode;
+  }
+
+  /** Completely clear canvas and all the sequencer grids */
+  clearAll() {
+    // 1) clear the drawing canvas
+    this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+    // 2) reset every grid cell in each machine
+    this.clearGrid(this.drumMachine.grid);
+    this.clearGrid(this.pianoMachine.grid);
+    this.clearGrid(this.violinMachine.grid);
+    this.clearGrid(this.hawksruleMachine.grid);
+    this.clearGrid(this.arpComponent.grid);
+  }
+
+  /** helper to zero out a key→boolean[] map */
+  private clearGrid(grid: { [key: string]: boolean[] }) {
+    Object.values(grid).forEach(arr => arr.fill(false));
+  }
+
   /* ~~~~ Instrument-Specific Grid Toggling ~~~~ */
   paintCellOnSelectedInstrument(x: number, y: number) {
-    // We must figure out how many rows, columns, etc. for the currently selected instrument
-    if (this.selectedInstrument === 'drums') {
-      const rowCount = this.drumMachine.samples.length;
-      const colCount = this.drumMachine.sequenceLength;
-    
-      const rowHeight = this.canvasHeight / rowCount;
-      const stepWidth = this.canvasWidth / colCount;
-    
-      const row = Math.floor(y / rowHeight);
-      const col = Math.floor(x / stepWidth);
-    
-      if (row >= 0 && row < rowCount && col >= 0 && col < colCount) {
-        // Toggle the row in the drum machine
-        const sample = this.drumMachine.samples[row];
-        const key = sample.key;
-        if (!this.drumMachine.grid[key][col]) {
-          this.drumMachine.grid[key][col] = true;
-          this.drumMachine.playSound(key);
-        }
-      }
-    
-    } else if (this.selectedInstrument === 'piano') {
-      const samples  = this.pianoMachine.samples;
-      const rowCount = samples.length;
-      const colCount = this.pianoMachine.sequenceLength;
-    
-      const rowHeight = this.canvasHeight / rowCount;
-      const stepWidth = this.canvasWidth  / colCount;
-    
-      const row = Math.floor(y / rowHeight);
-      const col = Math.floor(x / stepWidth);
-    
-      if (row >= 0 && row < rowCount && col >= 0 && col < colCount) {
-        const keyName = samples[row].key;
-        if (!this.pianoMachine.grid[keyName][col]) {
-          this.pianoMachine.grid[keyName][col] = true;
-          this.pianoMachine.playSound(keyName);
-        }
-      }   
-    } else if (this.selectedInstrument === 'arp') {
-      const rowCount = this.arpComponent.samples.length;
-      const colCount = this.arpComponent.sequenceLength;
-    
-      const rowHeight = this.canvasHeight / rowCount;
-      const stepWidth = this.canvasWidth / colCount;
-    
-      const row = Math.floor(y / rowHeight);
-      const col = Math.floor(x / stepWidth);
-    
-      if (row >= 0 && row < rowCount && col >= 0 && col < colCount) {
-        // grab the Sample object…
-        const sample = this.arpComponent.samples[row];
-        // …then its key string
-        const key = sample.key;
-    
-        if (!this.arpComponent.grid[key][col]) {
-          this.arpComponent.grid[key][col] = true;
-          this.arpComponent.playSound(key);
-        }
-      }
-    } else if (this.selectedInstrument === 'violin') {
-      const samples  = this.violinMachine.samples;
-      const rowCount = samples.length;
-      const colCount = this.violinMachine.sequenceLength;
-    
-      const rowHeight = this.canvasHeight / rowCount;
-      const stepWidth = this.canvasWidth  / colCount;
-    
-      const row = Math.floor(y / rowHeight);
-      const col = Math.floor(x / stepWidth);
-    
-      if (row >= 0 && row < rowCount && col >= 0 && col < colCount) {
-        const keyName = samples[row].key;
-        if (!this.violinMachine.grid[keyName][col]) {
-          this.violinMachine.grid[keyName][col] = true;
-          this.violinMachine.playSound(keyName);
-        }
-      }
-    } else if (this.selectedInstrument === 'hawksrule') {
-      const samples  = this.hawksruleMachine.samples;
-      const rowCount = samples.length;
-      const colCount = this.hawksruleMachine.sequenceLength;
-    
-      const rowHeight = this.canvasHeight / rowCount;
-      const stepWidth = this.canvasWidth  / colCount;
-    
-      const row = Math.floor(y / rowHeight);
-      const col = Math.floor(x / stepWidth);
-    
-      if (row >= 0 && row < rowCount && col >= 0 && col < colCount) {
-        const keyName = samples[row].key;
-        if (!this.hawksruleMachine.grid[keyName][col]) {
-          this.hawksruleMachine.grid[keyName][col] = true;
-          this.hawksruleMachine.playSound(keyName);
-        }
+    // 1) Choose the right machine’s data & play function
+    let samples: { key: string }[];
+    let gridMap: { [key: string]: boolean[] };
+    let seqLen: number;
+    let playFn: (key: string) => void;
+  
+    switch (this.selectedInstrument) {
+      case 'drums':
+        samples = this.drumMachine.samples;
+        seqLen  = this.drumMachine.sequenceLength;
+        gridMap = this.drumMachine.grid;
+        playFn  = this.drumMachine.playSound.bind(this.drumMachine);
+        break;
+      case 'piano':
+        samples = this.pianoMachine.samples;
+        seqLen  = this.pianoMachine.sequenceLength;
+        gridMap = this.pianoMachine.grid;
+        playFn  = this.pianoMachine.playSound.bind(this.pianoMachine);
+        break;
+      case 'violin':
+        samples = this.violinMachine.samples;
+        seqLen  = this.violinMachine.sequenceLength;
+        gridMap = this.violinMachine.grid;
+        playFn  = this.violinMachine.playSound.bind(this.violinMachine);
+        break;
+      case 'hawksrule':
+        samples = this.hawksruleMachine.samples;
+        seqLen  = this.hawksruleMachine.sequenceLength;
+        gridMap = this.hawksruleMachine.grid;
+        playFn  = this.hawksruleMachine.playSound.bind(this.hawksruleMachine);
+        break;
+      case 'arp':
+        samples = this.arpComponent.samples;
+        seqLen  = this.arpComponent.sequenceLength;
+        gridMap = this.arpComponent.grid;
+        playFn  = this.arpComponent.playSound.bind(this.arpComponent);
+        break;
+      default:
+        return; // unknown instrument
+    }
+  
+    // 2) Figure out which cell was clicked
+    const rowCount = samples.length;
+    const colCount = seqLen;
+    const rowHeight = this.canvasHeight / rowCount;
+    const stepWidth = this.canvasWidth  / colCount;
+  
+    const row = Math.floor(y / rowHeight);
+    const col = Math.floor(x / stepWidth);
+  
+    // out‐of‐bounds guard
+    if (row < 0 || row >= rowCount || col < 0 || col >= colCount) return;
+  
+    // 3) Erase or draw
+    const key = samples[row].key;
+    if (this.eraserMode) {
+      // erase mode ➔ always turn off
+      gridMap[key][col] = false;
+    } else {
+      // draw mode ➔ only turn on and play if it was off
+      if (!gridMap[key][col]) {
+        gridMap[key][col] = true;
+        playFn(key);
       }
     }
   }
+  
 
   /* ~~~~ Cosmetic: Color Based on Instrument ~~~~ */
   getColorForInstrument(instr: string): string {

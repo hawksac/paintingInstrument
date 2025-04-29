@@ -32,12 +32,13 @@
     transition: background-color 0.1s ease;
   }
   
-  .step.active {
+  /* .step.active {
     background-color: #cfc;
-  }
+  } */
   
   .step.current {
-    outline: 1px solid #f00;
+    border-left: 1px solid #f00;
+    border-right: 1px solid #f00;
   }
   
   /* Canvas overlay: set pointer-events to none so underlying buttons remain clickable */

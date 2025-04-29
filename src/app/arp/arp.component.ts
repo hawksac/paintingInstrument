@@ -1,6 +1,8 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
 
 interface Sample {
   name: string;
@@ -18,9 +20,10 @@ interface Sample {
 export class ArpComponent implements OnInit, AfterViewInit {
   @ViewChild('arpCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
+  
 
   // Define the ARP sample assets (1–40)
-  baseSamples: Sample[] = Array.from({ length: 40 }, (_, i) => {
+  baseSamples: Sample[] = Array.from({ length: 20 }, (_, i) => {
     const idx = i + 1;
     return {
       name: `ARP ${idx}`,
@@ -32,10 +35,9 @@ export class ArpComponent implements OnInit, AfterViewInit {
   // Use all samples
   samples: Sample[] = [...this.baseSamples];
 
-  sequenceLength: number = 64;
+  sequenceLength: number = 36;
   grid: { [key: string]: boolean[] } = {};
   currentStep: number = 0;
-  bpm: number = 120;
   
   arpSounds: { [key: string]: HTMLAudioElement } = {};
 
@@ -50,7 +52,11 @@ export class ArpComponent implements OnInit, AfterViewInit {
   private lastX = 0;
   private lastY = 0;
 
-  constructor() {}
+  bpm$: Observable<number>;
+
+  constructor(bpmService: BpmService) {
+    this.bpm$ = bpmService.bpm$;
+  }
 
   ngOnInit(): void {
     this.loadSounds();
@@ -132,7 +138,7 @@ export class ArpComponent implements OnInit, AfterViewInit {
 
     // Draw on the canvas
     this.ctx.lineTo(currentX, currentY);
-    this.ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+    this.ctx.strokeStyle = '#f39c12';
     this.ctx.lineWidth = 5;
     this.ctx.stroke();
 

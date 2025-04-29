@@ -5,6 +5,12 @@
   <button class="instrument-button violin"     (click)="selectedInstrument='violin'"></button>
   <button class="instrument-button hawksrule"  (click)="selectedInstrument='hawksrule'"></button>
   <button class="instrument-button arp"        (click)="selectedInstrument='arp'"></button>
+  <button 
+    class="eraser-btn" 
+    [class.active]="eraserMode"
+    (click)="toggleEraser()">
+    {{ eraserMode ? '🧽 Eraser On' : '🧽 Eraser Off' }}
+  </button>
 </div>
 
 <div class="layout-container">
@@ -32,4 +38,15 @@
 <div class="playback">
   <button class="play-btn" (click)="startPlayback()">Play ▶️</button>
   <button class="stop-btn"  (click)="stopPlayback()">Stop ⏹️</button>
+  <label for="bpm">BPM:</label>
+  <input id="bpm"
+         type="number"
+         min="30" max="300"
+         [(ngModel)]="bpm" />
+
+  <button 
+    class="clear-btn"
+    (click)="clearAll()">
+    Clear All 🗑️
+  </button>
 </div>

@@ -1,6 +1,5 @@
 <!-- hawksrule-machine.component.html -->
 <div class="hawksrule-machine">
-  <canvas #hawksruleCanvas class="canvas-overlay"></canvas>
   <div class="row" *ngFor="let sample of samples; let rowIndex = index">
     <button
       *ngFor="let _ of grid[sample.key]; let colIndex = index"

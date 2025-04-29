@@ -1,6 +1,9 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
+
 
 interface Sample {
   name: string;
@@ -20,7 +23,7 @@ export class PianoMachineComponent implements OnInit, AfterViewInit {
   private ctx!: CanvasRenderingContext2D;
 
   // exactly 40 piano samples, just like the drum machine
-  baseSamples: Sample[] = Array.from({ length: 40 }, (_, i) => {
+  baseSamples: Sample[] = Array.from({ length: 20 }, (_, i) => {
     const idx = i + 1;
     return {
       name: `Piano ${idx}`,
@@ -32,10 +35,9 @@ export class PianoMachineComponent implements OnInit, AfterViewInit {
   // use them directly for sequencing
   samples: Sample[] = [...this.baseSamples];
 
-  sequenceLength: number = 64;
+  sequenceLength: number = 36;
   grid: { [key: string]: boolean[] } = {};
   currentStep: number = 0;
-  bpm: number = 120;
 
   // audio store
   pianoSounds: { [key: string]: HTMLAudioElement } = {};
@@ -50,6 +52,12 @@ export class PianoMachineComponent implements OnInit, AfterViewInit {
   private drawing = false;
   private lastX   = 0;
   private lastY   = 0;
+
+  bpm$: Observable<number>;
+  
+  constructor(bpmService: BpmService) {
+    this.bpm$ = bpmService.bpm$;
+  }
 
   ngOnInit(): void {
     this.loadSounds();
@@ -111,7 +119,7 @@ export class PianoMachineComponent implements OnInit, AfterViewInit {
     }
 
     this.ctx.lineTo(x, y);
-    this.ctx.strokeStyle = 'rgba(255,0,0,1)';
+    this.ctx.strokeStyle = '#8e44ad';
     this.ctx.lineWidth   = 5;
     this.ctx.stroke();
     this.lastX = x;

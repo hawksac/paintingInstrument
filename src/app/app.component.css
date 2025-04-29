@@ -81,3 +81,40 @@
 
 .play-btn { background: #2ecc71; color: #fff; }
 .stop-btn { background: #e74c3c; color: #fff; }
+
+
+/* Eraser toggle in top-right */
+.eraser-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 30;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #ccc;
+  cursor: pointer;
+  transition: background .2s;
+}
+.eraser-btn.active {
+  background: #f39c12;
+  color: white;
+}
+
+/* Clear all in bottom-right */
+.clear-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 30;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #e74c3c;
+  color: white;
+  cursor: pointer;
+  transition: background .2s;
+}
+.clear-btn:hover {
+  background: #c0392b;
+}

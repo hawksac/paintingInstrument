@@ -34,13 +34,14 @@
 }
 
 /* When toggled active, the step becomes visible */
-.step.active {
+/* .step.active {
   background-color: #ffa;
-}
+} */
 
 /* Highlight the current step with a subtle border (if desired) */
 .step.current {
-  outline: 1px solid #f00;
+  border-left: 1px solid #f00;
+  border-right: 1px solid #f00;
 }
 
 /* Canvas overlay covering the entire drum-machine */

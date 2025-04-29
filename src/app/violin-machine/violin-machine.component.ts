@@ -1,6 +1,9 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
+
 
 interface Sample {
   name: string;
@@ -20,7 +23,7 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
   private ctx!: CanvasRenderingContext2D;
 
   // EXACTLY 40 brass samples, just like drums
-  baseSamples: Sample[] = Array.from({ length: 40 }, (_, i) => {
+  baseSamples: Sample[] = Array.from({ length: 20 }, (_, i) => {
     const idx = i + 1;
     return {
       name: `Brass ${idx}`,
@@ -30,10 +33,9 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
   });
   samples: Sample[] = [...this.baseSamples];
 
-  sequenceLength = 64;
+  sequenceLength = 36;
   grid: { [key: string]: boolean[] } = {};
   currentStep = 0;
-  bpm = 120;
 
   // audio storage
   private violinSounds: { [key: string]: HTMLAudioElement } = {};
@@ -48,6 +50,12 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
   private drawing = false;
   private lastX   = 0;
   private lastY   = 0;
+  
+  bpm$: Observable<number>;
+
+  constructor(bpmService: BpmService) {
+    this.bpm$ = bpmService.bpm$;
+  }
 
   ngOnInit(): void {
     this.loadSounds();
@@ -109,7 +117,7 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
     }
 
     this.ctx.lineTo(x, y);
-    this.ctx.strokeStyle = 'rgba(255,0,0,1)';
+    this.ctx.strokeStyle = '#27ae60';
     this.ctx.lineWidth   = 5;
     this.ctx.stroke();
     this.lastX = x;

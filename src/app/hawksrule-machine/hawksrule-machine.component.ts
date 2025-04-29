@@ -1,6 +1,9 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
+
 
 interface Sample {
   name: string;
@@ -32,7 +35,7 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
   ];
 
   // generate 32 organ samples:
-  private readonly _organ = Array.from({ length: 32 }, (_, i) => {
+  private readonly _organ = Array.from({ length: 20 }, (_, i) => {
     const idx = i + 1;
     return {
       name: `Organ ${idx}`,
@@ -44,10 +47,9 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
   // combine into exactly 40 rows:
   samples: Sample[] = [...this._base, ...this._organ];
 
-  sequenceLength = 64;
+  sequenceLength = 36;
   grid: { [key: string]: boolean[] } = {};
   currentStep = 0;
-  bpm = 120;
 
   private hawksruleSounds: { [key: string]: HTMLAudioElement } = {};
 
@@ -61,6 +63,12 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
   private drawing = false;
   private lastX   = 0;
   private lastY   = 0;
+
+  bpm$: Observable<number>;
+
+  constructor(bpmService: BpmService) {
+    this.bpm$ = bpmService.bpm$;
+  }
 
   ngOnInit(): void {
     this.loadSounds();
@@ -122,7 +130,7 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
     }
 
     this.ctx.lineTo(x, y);
-    this.ctx.strokeStyle = 'rgba(255,0,0,1)';
+    this.ctx.strokeStyle = '#3498db';
     this.ctx.lineWidth   = 5;
     this.ctx.stroke();
     this.lastX = x;

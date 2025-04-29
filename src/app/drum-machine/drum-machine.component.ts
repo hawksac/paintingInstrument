@@ -1,6 +1,8 @@
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
 
 interface Sample {
   name: string;
@@ -23,7 +25,7 @@ export class DrumMachineComponent implements OnInit, AfterViewInit {
   drumSounds: { [key: string]: HTMLAudioElement } = {};
 
   // Define the BEATS sample assets (1–40)
-  baseSamples: Sample[] = Array.from({ length: 40 }, (_, i) => {
+  baseSamples: Sample[] = Array.from({ length: 20 }, (_, i) => {
     const idx = i + 1;
     return {
       name: `Beat ${idx}`,
@@ -35,10 +37,9 @@ export class DrumMachineComponent implements OnInit, AfterViewInit {
   // Use all samples for sequencing
   samples: Sample[] = [...this.baseSamples];
 
-  sequenceLength: number = 64;
+  sequenceLength: number = 36;
   grid: { [key: string]: boolean[] } = {};
   currentStep: number = 0;
-  bpm: number = 120;
 
   // Canvas mapping
   canvasWidth: number = 0;
@@ -51,7 +52,11 @@ export class DrumMachineComponent implements OnInit, AfterViewInit {
   private lastX = 0;
   private lastY = 0;
 
-  constructor() {}
+  bpm$: Observable<number>;
+
+  constructor(bpmService: BpmService) {
+    this.bpm$ = bpmService.bpm$;
+  }
 
   ngOnInit(): void {
     this.loadSounds();
@@ -125,7 +130,7 @@ export class DrumMachineComponent implements OnInit, AfterViewInit {
     }
 
     this.ctx.lineTo(currentX, currentY);
-    this.ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+    this.ctx.strokeStyle = '#e74c3c';
     this.ctx.lineWidth = 5;
     this.ctx.stroke();
 
