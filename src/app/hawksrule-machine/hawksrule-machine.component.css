@@ -1,55 +1,55 @@
 :host {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-  }
-  
-  .hawksrule-machine {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Each row occupies equal vertical space */
-  .row {
-    flex: 1;
-    display: flex;
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Each step fills its space and toggles color when active */
-  .step {
-    flex: 1;
-    margin: 0;
-    padding: 0;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-    transition: background-color 0.1s ease;
-  }
-  
-  .step.active {
-    background-color: #cfc;
-  }
-  
-  .step.current {
-    outline: 1px solid #f00;
-  }
-  
-  /* Canvas overlay: set pointer-events to none so underlying buttons remain clickable */
-  .canvas-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 10;
-  }
-  
+  display: block;     
+  position: relative; 
+  width: 100%;
+  height: 100%;
+}
+
+/* Make the container positioned so we can absolutely position the canvas */
+.hawksrule-machine {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Each row takes equal vertical space with no gaps */
+.row {
+  flex: 1;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each step button fills its container equally */
+.step {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+/* When toggled active, the step becomes visible */
+.step.active {
+  background-color: #ffa;
+}
+
+/* Highlight the current step with a subtle border (if desired) */
+.step.current {
+  outline: 1px solid #f00;
+}
+
+/* Canvas overlay covering the entire drum-machine */
+.canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}

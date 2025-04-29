@@ -1,0 +1,13 @@
+<div class="arp-machine">
+    <!-- Grid for sample buttons -->
+    <div class="row" *ngFor="let sample of samples; let rowIndex = index">
+      <button
+        *ngFor="let step of grid[sample.key]; let colIndex = index"
+        class="step"
+        [class.active]="grid[sample.key][colIndex]"
+        [class.current]="colIndex === currentStep"
+        (click)="toggleStep(sample.key, colIndex)">
+      </button>
+    </div>
+  </div>
+  

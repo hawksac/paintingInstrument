@@ -19,40 +19,48 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
   @ViewChild('hawksruleCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
 
-  // Define the sample assets (first eight)
-  baseSamples: Sample[] = [
+  // your 8 existing samples:
+  private readonly _base = [
     { name: 'Guitar UprightBass', key: 'sample1', path: 'assets/hawksrule1/DOM_guitar_one_shot_uprightbass_short_01_Cmaj.wav' },
-    { name: 'Cassette Piano', key: 'sample2', path: 'assets/hawksrule1/jc_ma_cassette_piano_one_shot_mulberryplus_Cmaj.wav' },
-    { name: 'Bass Acoustic Round', key: 'sample3', path: 'assets/hawksrule1/MB_JHE_bass_one_shot_acoustic_round_Cmaj.wav' },
-    { name: 'Long Major', key: 'sample4', path: 'assets/hawksrule1/pt_long_major1_C2.wav' },
-    { name: 'Short Major7th', key: 'sample5', path: 'assets/hawksrule1/pt_short_major7th_C.wav' },
-    { name: 'Tom Classic', key: 'sample6', path: 'assets/hawksrule1/TS_VD_tom_classic_maple_12_punch.wav' },
-    { name: 'Tom Floor', key: 'sample7', path: 'assets/hawksrule1/TS_VD_tom_floor_60s_slinger_punch.wav' },
-    { name: 'Tom Rack', key: 'sample8', path: 'assets/hawksrule1/TS_VD_tom_rack_60s_luddy.wav' },
+    { name: 'Cassette Piano',       key: 'sample2', path: 'assets/hawksrule1/jc_ma_cassette_piano_one_shot_mulberryplus_Cmaj.wav' },
+    { name: 'Bass Acoustic Round',   key: 'sample3', path: 'assets/hawksrule1/MB_JHE_bass_one_shot_acoustic_round_Cmaj.wav' },
+    { name: 'Long Major',            key: 'sample4', path: 'assets/hawksrule1/pt_long_major1_C2.wav' },
+    { name: 'Short Major7th',        key: 'sample5', path: 'assets/hawksrule1/pt_short_major7th_C.wav' },
+    { name: 'Tom Classic',           key: 'sample6', path: 'assets/hawksrule1/TS_VD_tom_classic_maple_12_punch.wav' },
+    { name: 'Tom Floor',             key: 'sample7', path: 'assets/hawksrule1/TS_VD_tom_floor_60s_slinger_punch.wav' },
+    { name: 'Tom Rack',              key: 'sample8', path: 'assets/hawksrule1/TS_VD_tom_rack_60s_luddy.wav' },
   ];
 
-  // Repeat the samples once to have 16 rows
-  samples: Sample[] = [ ...this.baseSamples, ...this.baseSamples.map(s => ({ ...s, key: s.key + '_r' })) ];
+  // generate 32 organ samples:
+  private readonly _organ = Array.from({ length: 32 }, (_, i) => {
+    const idx = i + 1;
+    return {
+      name: `Organ ${idx}`,
+      key:  `organ-${idx}`,
+      path: `assets/organ/organ-${idx}.mp3`
+    } as Sample;
+  });
 
-  sequenceLength: number = 64;
+  // combine into exactly 40 rows:
+  samples: Sample[] = [...this._base, ...this._organ];
+
+  sequenceLength = 64;
   grid: { [key: string]: boolean[] } = {};
-  currentStep: number = 0;
-  bpm: number = 120;
-  
-  hawksruleSounds: { [key: string]: HTMLAudioElement } = {};
+  currentStep = 0;
+  bpm = 120;
 
-  // For canvas coordinate mapping
-  canvasWidth: number = 0;
-  canvasHeight: number = 0;
-  rowHeight: number = 0;
-  stepWidth: number = 0;
+  private hawksruleSounds: { [key: string]: HTMLAudioElement } = {};
 
-  // Mouse/painting flags for drawing
+  // canvas sizing
+  canvasWidth  = 0;
+  canvasHeight = 0;
+  rowHeight    = 0;
+  stepWidth    = 0;
+
+  // drawing state
   private drawing = false;
-  private lastX = 0;
-  private lastY = 0;
-
-  constructor() {}
+  private lastX   = 0;
+  private lastY   = 0;
 
   ngOnInit(): void {
     this.loadSounds();
@@ -64,121 +72,99 @@ export class HawksruleMachineComponent implements OnInit, AfterViewInit {
     this.ctx = canvas.getContext('2d')!;
     this.resizeCanvas();
 
-    // Attach document-level event listeners for drawing
     document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), true);
     document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), true);
-    document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), true);
+    document.addEventListener('mouseup',   this.onDocumentMouseUp.bind(this),   true);
   }
-  
+
   @HostListener('window:resize')
   resizeCanvas(): void {
     const canvas = this.canvasRef.nativeElement;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const rect   = canvas.getBoundingClientRect();
+    canvas.width  = rect.width;
+    canvas.height = rect.height;
 
-    this.canvasWidth = canvas.width;
+    this.canvasWidth  = canvas.width;
     this.canvasHeight = canvas.height;
-    this.rowHeight = this.canvasHeight / this.samples.length;
-    this.stepWidth = this.canvasWidth / this.sequenceLength;
+    this.rowHeight    = this.canvasHeight / this.samples.length;
+    this.stepWidth    = this.canvasWidth  / this.sequenceLength;
   }
 
-  private isEventOverCanvas(event: MouseEvent, rect: DOMRect): boolean {
-    return (
-      event.clientX >= rect.left &&
-      event.clientX <= rect.right &&
-      event.clientY >= rect.top &&
-      event.clientY <= rect.bottom
-    );
+  private isEventOverCanvas(e: MouseEvent, r: DOMRect): boolean {
+    return e.clientX >= r.left && e.clientX <= r.right &&
+           e.clientY >= r.top  && e.clientY <= r.bottom;
   }
 
-  private onDocumentMouseDown(event: MouseEvent): void {
-    const canvasRect = this.canvasRef.nativeElement.getBoundingClientRect();
-    if (this.isEventOverCanvas(event, canvasRect)) {
-      this.drawing = true;
-      this.lastX = event.clientX - canvasRect.left;
-      this.lastY = event.clientY - canvasRect.top;
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.lastX, this.lastY);
-    }
+  private onDocumentMouseDown(e: MouseEvent): void {
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    if (!this.isEventOverCanvas(e, rect)) return;
+    this.drawing = true;
+    this.lastX = e.clientX - rect.left;
+    this.lastY = e.clientY - rect.top;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.lastX, this.lastY);
   }
 
-  private onDocumentMouseMove(event: MouseEvent): void {
-    if (!this.drawing) {
-      return;
+  private onDocumentMouseMove(e: MouseEvent): void {
+    if (!this.drawing) return;
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    if (!this.isEventOverCanvas(e, rect)) return;
+
+    const x   = e.clientX - rect.left;
+    const y   = e.clientY - rect.top;
+    const row = Math.floor(y / this.rowHeight);
+    const col = Math.floor(x / this.stepWidth);
+    const s   = this.samples[row];
+
+    if (s && !this.grid[s.key][col]) {
+      this.grid[s.key][col] = true;
+      this.playSound(s.key);
     }
 
-    const canvasRect = this.canvasRef.nativeElement.getBoundingClientRect();
-    if (!this.isEventOverCanvas(event, canvasRect)) {
-      return;
-    }
-
-    const currentX = event.clientX - canvasRect.left;
-    const currentY = event.clientY - canvasRect.top;
-
-    // Determine which row and column are being drawn over
-    const row = Math.floor(currentY / this.rowHeight);
-    const col = Math.floor(currentX / this.stepWidth);
-
-    if (row >= 0 && row < this.samples.length && col >= 0 && col < this.sequenceLength) {
-      const sampleKey = this.samples[row].key;
-      if (!this.grid[sampleKey][col]) {
-        this.grid[sampleKey][col] = true;
-        this.playSound(sampleKey);
-      }
-    }
-
-    // Draw on the canvas
-    this.ctx.lineTo(currentX, currentY);
-    this.ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
-    this.ctx.lineWidth = 5;
+    this.ctx.lineTo(x, y);
+    this.ctx.strokeStyle = 'rgba(255,0,0,1)';
+    this.ctx.lineWidth   = 5;
     this.ctx.stroke();
-
-    this.lastX = currentX;
-    this.lastY = currentY;
+    this.lastX = x;
+    this.lastY = y;
   }
 
-  private onDocumentMouseUp(event: MouseEvent): void {
-    if (this.drawing) {
-      this.drawing = false;
-      this.ctx.closePath();
-    }
+  private onDocumentMouseUp(_: MouseEvent): void {
+    if (!this.drawing) return;
+    this.drawing = false;
+    this.ctx.closePath();
   }
 
   loadSounds(): void {
-    // Load each sample sound into hawksruleSounds using its file path
-    this.samples.forEach(sample => {
-      const audio = new Audio(sample.path);
-      this.hawksruleSounds[sample.key] = audio;
+    this.samples.forEach(s => {
+      this.hawksruleSounds[s.key] = new Audio(s.path);
     });
   }
 
   initializeGrid(): void {
-    // Create a 64-step grid for each sample (key)
-    this.samples.forEach(sample => {
-      this.grid[sample.key] = new Array(this.sequenceLength).fill(false);
+    this.samples.forEach(s => {
+      this.grid[s.key] = new Array(this.sequenceLength).fill(false);
     });
   }
 
-  toggleStep(sampleKey: string, index: number): void {
-    this.grid[sampleKey][index] = !this.grid[sampleKey][index];
-    if (this.grid[sampleKey][index]) {
-      this.playSound(sampleKey);
+  toggleStep(key: string, i: number): void {
+    this.grid[key][i] = !this.grid[key][i];
+    if (this.grid[key][i]) {
+      this.playSound(key);
     }
   }
 
-  playSound(sampleKey: string): void {
-    const sound = this.hawksruleSounds[sampleKey];
-    if (sound) {
-      sound.currentTime = 0;
-      sound.play();
-    }
+  playSound(key: string): void {
+    const snd = this.hawksruleSounds[key];
+    if (!snd) return;
+    snd.currentTime = 0;
+    snd.play();
   }
 
   playCurrentStep(): void {
-    // Plays sounds for steps marked active on the current step
-    this.samples.forEach(sample => {
-      if (this.grid[sample.key][this.currentStep]) {
-        this.playSound(sample.key);
+    this.samples.forEach(s => {
+      if (this.grid[s.key][this.currentStep]) {
+        this.playSound(s.key);
       }
     });
   }

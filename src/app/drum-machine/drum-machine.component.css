@@ -1,10 +1,8 @@
 :host {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  display: block;     
+  position: relative; 
+  width: 100%;
+  height: 100%;
 }
 
 /* Make the container positioned so we can absolutely position the canvas */
@@ -52,12 +50,6 @@
   left: 0;
   width: 100%;
   height: 100%;
-  /* 
-    pointer-events: none => So the clicks pass through to the buttons 
-    If you want to ONLY draw and not toggle steps with direct clicks, keep pointer-events:none.
-    If you want the canvas to intercept clicks for drawing, pointer-events:all, 
-    but then you’ll lose direct button clicks unless you handle them in code.
-  */
   pointer-events: none;
   z-index: 10;
 }

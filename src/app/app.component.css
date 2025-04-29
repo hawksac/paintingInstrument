@@ -1,0 +1,83 @@
+/* app.component.css */
+.layout-container {
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  height: calc(100vh - 160px);
+  margin: 20px auto;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+/* The master canvas */
+.master-canvas {
+  position: absolute;
+  top:0; left:0;
+  width:100%;
+  height:100%;
+  z-index:10;
+}
+
+/* **NEW**: every .layer sits exactly on top of the canvas */
+.layer {
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;      /* behind the master‑canvas */
+  pointer-events: none; /* if you want drawing through to the canvas */
+}
+
+.colors {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  z-index: 20;
+}
+
+.instrument-button {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: transform .1s ease-in-out;
+}
+.instrument-button:hover {
+  transform: scale(1.1);
+}
+
+.instrument-button.drums     { background: #e74c3c; }
+.instrument-button.piano     { background: #8e44ad; }
+.instrument-button.violin    { background: #27ae60; }
+.instrument-button.hawksrule { background: #3498db; }
+.instrument-button.arp       { background: #f39c12; }
+
+.playback {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.playback button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.play-btn { background: #2ecc71; color: #fff; }
+.stop-btn { background: #e74c3c; color: #fff; }

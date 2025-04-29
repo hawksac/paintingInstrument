@@ -1,16 +1,13 @@
+<!-- hawksrule-machine.component.html -->
 <div class="hawksrule-machine">
-    <!-- Grid for sample buttons -->
-    <div class="row" *ngFor="let sample of samples; let rowIndex = index">
-      <button
-        *ngFor="let step of grid[sample.key]; let colIndex = index"
-        class="step"
-        [class.active]="grid[sample.key][colIndex]"
-        [class.current]="colIndex === currentStep"
-        (click)="toggleStep(sample.key, colIndex)">
-      </button>
-    </div>
-  
-    <!-- Canvas overlay for freehand drawing -->
-    <canvas #hawksruleCanvas class="canvas-overlay"></canvas>
+  <canvas #hawksruleCanvas class="canvas-overlay"></canvas>
+  <div class="row" *ngFor="let sample of samples; let rowIndex = index">
+    <button
+      *ngFor="let _ of grid[sample.key]; let colIndex = index"
+      class="step"
+      [class.active]="grid[sample.key][colIndex]"
+      [class.current]="colIndex === currentStep"
+      (click)="toggleStep(sample.key, colIndex)">
+    </button>
   </div>
-  
+</div>

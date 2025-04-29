@@ -1,15 +1,11 @@
 <div class="drum-machine">
-  <!-- Existing drum pads layout -->
-  <div class="row" *ngFor="let pad of pads; let rowIndex = index">
+  <div class="row" *ngFor="let sample of samples; let rowIndex = index">
     <button
-      *ngFor="let stepValue of grid[pad.key]; let colIndex = index"
+      *ngFor="let stepValue of grid[sample.key]; let colIndex = index"
       class="step"
-      [class.active]="grid[pad.key][colIndex]"
+      [class.active]="grid[sample.key][colIndex]"
       [class.current]="colIndex === currentStep"
-      (click)="toggleStep(pad.key, colIndex)">
+      (click)="toggleStep(sample.key, colIndex)">
     </button>
   </div>
-
-  <!-- Canvas overlay for freehand drawing -->
-  <canvas #drumCanvas class="canvas-overlay"></canvas>
 </div>

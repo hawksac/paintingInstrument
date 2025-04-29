@@ -1,23 +1,35 @@
-<!-- Master controls -->
-<div class="controls">
-    <button (click)="togglePlayback()">{{ playing ? 'Stop' : 'Play' }}</button>
-    <button (click)="selectedInstrument = 'drums'">Drums</button>
-    <button (click)="selectedInstrument = 'piano'">Piano</button>
-    <button (click)="selectedInstrument = 'violin'">Violin</button>
-    <button (click)="selectedInstrument = 'hawksrule'">Hawksrule</button>
-  </div>
-  
+<!-- app.component.html -->
+<div class="colors">
+  <button class="instrument-button drums"      (click)="selectedInstrument='drums'"></button>
+  <button class="instrument-button piano"      (click)="selectedInstrument='piano'"></button>
+  <button class="instrument-button violin"     (click)="selectedInstrument='violin'"></button>
+  <button class="instrument-button hawksrule"  (click)="selectedInstrument='hawksrule'"></button>
+  <button class="instrument-button arp"        (click)="selectedInstrument='arp'"></button>
+</div>
+
+<div class="layout-container">
+  <!-- This canvas overlay belongs entirely to the parent (AppComponent) -->
+  <canvas #masterCanvas class="master-canvas"></canvas>
+
   <!-- Instrument components (all remain in the DOM; only one is visible) -->
-  <div [hidden]="selectedInstrument !== 'drums'">
+  <div class="layer" [hidden]="selectedInstrument !== 'drums'">
     <app-drum-machine></app-drum-machine>
   </div>
-  <div [hidden]="selectedInstrument !== 'piano'">
+  <div class="layer" [hidden]="selectedInstrument !== 'piano'">
     <app-piano-machine></app-piano-machine>
   </div>
-  <div [hidden]="selectedInstrument !== 'violin'">
+  <div class="layer" [hidden]="selectedInstrument !== 'violin'">
     <app-violin-machine></app-violin-machine>
   </div>
-  <div [hidden]="selectedInstrument !== 'hawksrule'">
+  <div class="layer" [hidden]="selectedInstrument !== 'hawksrule'">
     <app-hawksrule-machine></app-hawksrule-machine>
   </div>
-  
+  <div class="layer" [hidden]="selectedInstrument !== 'arp'">
+    <app-arp></app-arp>
+  </div>
+</div>
+
+<div class="playback">
+  <button class="play-btn" (click)="startPlayback()">Play ▶️</button>
+  <button class="stop-btn"  (click)="stopPlayback()">Stop ⏹️</button>
+</div>
