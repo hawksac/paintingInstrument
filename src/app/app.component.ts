@@ -63,12 +63,17 @@ export class AppComponent implements AfterViewInit {
     // Setup the master canvas
     const canvas = this.masterCanvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    this.resizeCanvas();
+    new ResizeObserver(() => this.resizeCanvas())
+    .observe(canvas.parentElement!);
 
     // Listen for mouse events at the document level (or canvas level)
     document.addEventListener('mousedown', this.onMouseDown.bind(this), true);
     document.addEventListener('mousemove', this.onMouseMove.bind(this), true);
     document.addEventListener('mouseup', this.onMouseUp.bind(this), true);
+
+    document.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+    document.addEventListener('touchmove',  this.onTouchMove.bind(this),  { passive: false });
+    document.addEventListener('touchend',   this.onTouchEnd.bind(this),   true);
   }
 
   @HostListener('window:resize')
@@ -136,7 +141,48 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  private isEventOverCanvas(event: MouseEvent, rect: DOMRect): boolean {
+  private onTouchStart(e: TouchEvent) {
+    e.preventDefault();  // prevent scrolling
+    const touch = e.touches[0];
+    const rect  = this.masterCanvasRef.nativeElement.getBoundingClientRect();
+    this.drawing = true;
+    this.lastX = touch.clientX - rect.left;
+    this.lastY = touch.clientY - rect.top;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.lastX, this.lastY);
+  }
+
+  private onTouchMove(e: TouchEvent) {
+    e.preventDefault();  // prevent scrolling
+    if (!this.drawing) return;
+    const touch = e.touches[0];
+    const rect  = this.masterCanvasRef.nativeElement.getBoundingClientRect();
+
+    // If the touch goes off-canvas, stop drawing
+    if (!this.isEventOverCanvas(touch, rect)) {
+      return;
+    }
+
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+
+    // Toggle the instrument's grid cell
+    this.paintCellOnSelectedInstrument(currentX, currentY);
+
+    // Freehand drawing stroke
+    this.ctx.lineTo(currentX, currentY);
+    this.ctx.strokeStyle = this.getColorForInstrument(this.selectedInstrument);
+    this.ctx.lineWidth = 5;
+    this.ctx.stroke();
+
+    this.lastX = currentX;
+    this.lastY = currentY;
+  }
+
+  private isEventOverCanvas(
+    event: { clientX: number; clientY: number },
+    rect: DOMRect
+  ): boolean {
     return (
       event.clientX >= rect.left &&
       event.clientX <= rect.right &&
@@ -144,7 +190,14 @@ export class AppComponent implements AfterViewInit {
       event.clientY <= rect.bottom
     );
   }
-
+  
+  private onTouchEnd(e: TouchEvent) {
+    e.preventDefault();            // stop any native scrolling
+    if (this.drawing) {
+      this.drawing = false;
+      this.ctx.closePath();
+    }
+  }
 
   /** Toggle eraser vs. draw mode */
   toggleEraser() {

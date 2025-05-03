@@ -1,15 +1,17 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  HostListener
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { BpmService } from '../../app/bpm.service'; // Added import for BpmService
+import { FormsModule }  from '@angular/forms';
+import { Observable }   from 'rxjs';
+import { BpmService }   from '../../app/bpm.service';
 
-
-interface Sample {
-  name: string;
-  key: string;
-  path: string;
-}
+interface Sample { name: string; key: string; path: string; }
 
 @Component({
   selector: 'app-violin-machine',
@@ -22,58 +24,58 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
   @ViewChild('violinCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
 
-  // EXACTLY 40 brass samples, just like drums
-  baseSamples: Sample[] = Array.from({ length: 20 }, (_, i) => {
-    const idx = i + 1;
-    return {
-      name: `Brass ${idx}`,
-      key:  `brass-${idx}`,
-      path: `assets/brass/brass-${idx}.mp3`
-    };
-  });
-  samples: Sample[] = [...this.baseSamples];
+  // EXACTLY 40 brass samples
+  baseSamples: Sample[] = Array.from({ length: 10 }, (_, i) => ({
+    name: `Brass ${i+1}`,
+    key:  `brass-${i+1}`,
+    path: `assets/brass/brass-${i+1}.mp3`
+  }));
+  samples = [...this.baseSamples];
 
-  sequenceLength = 36;
+  sequenceLength = 32;
   grid: { [key: string]: boolean[] } = {};
   currentStep = 0;
 
-  // audio storage
   private violinSounds: { [key: string]: HTMLAudioElement } = {};
 
-  // canvas sizing
-  canvasWidth  = 0;
+  canvasWidth = 0;
   canvasHeight = 0;
-  rowHeight    = 0;
-  stepWidth    = 0;
+  rowHeight   = 0;
+  stepWidth   = 0;
 
-  // drawing state
   private drawing = false;
-  private lastX   = 0;
-  private lastY   = 0;
+  private lastX = 0;
+  private lastY = 0;
   
   bpm$: Observable<number>;
-
   constructor(bpmService: BpmService) {
     this.bpm$ = bpmService.bpm$;
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadSounds();
     this.initializeGrid();
   }
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    this.resizeCanvas();
+    new ResizeObserver(() => this.resizeCanvas())
+    .observe(canvas.parentElement!);
 
-    document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), true);
-    document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), true);
-    document.addEventListener('mouseup',   this.onDocumentMouseUp.bind(this),   true);
+    // Mouse events
+    document.addEventListener('mousedown', this.onDocMouseDown.bind(this), true);
+    document.addEventListener('mousemove', this.onDocMouseMove.bind(this), true);
+    document.addEventListener('mouseup',   this.onDocMouseUp.bind(this),   true);
+
+    // Touch events
+    document.addEventListener('touchstart', this.onDocTouchStart.bind(this), { passive: false });
+    document.addEventListener('touchmove',  this.onDocTouchMove.bind(this),  { passive: false });
+    document.addEventListener('touchend',   this.onDocTouchEnd.bind(this),   true);
   }
 
   @HostListener('window:resize')
-  resizeCanvas(): void {
+  resizeCanvas() {
     const canvas = this.canvasRef.nativeElement;
     const rect   = canvas.getBoundingClientRect();
     canvas.width  = rect.width;
@@ -85,80 +87,101 @@ export class ViolinMachineComponent implements OnInit, AfterViewInit {
     this.stepWidth    = this.canvasWidth  / this.sequenceLength;
   }
 
-  private isEventOverCanvas(e: MouseEvent, r: DOMRect): boolean {
-    return e.clientX >= r.left && e.clientX <= r.right &&
-           e.clientY >= r.top  && e.clientY <= r.bottom;
+  private isEventOverCanvas(
+    evt: { clientX: number; clientY: number },
+    rect: DOMRect
+  ): boolean {
+    return (
+      evt.clientX >= rect.left &&
+      evt.clientX <= rect.right &&
+      evt.clientY >= rect.top &&
+      evt.clientY <= rect.bottom
+    );
   }
 
-  private onDocumentMouseDown(e: MouseEvent): void {
+  // — Mouse
+  private onDocMouseDown(ev: MouseEvent) {
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    if (!this.isEventOverCanvas(e, rect)) return;
+    if (!this.isEventOverCanvas(ev, rect)) return;
+    this.startDraw(ev.clientX, ev.clientY, rect);
+  }
+  private onDocMouseMove(ev: MouseEvent) {
+    if (!this.drawing) return;
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    this.drawAndToggle(ev.clientX, ev.clientY, rect, '#27ae60');
+  }
+  private onDocMouseUp(_: MouseEvent) {
+    this.endDraw();
+  }
+
+  // — Touch
+  private onDocTouchStart(ev: TouchEvent) {
+    ev.preventDefault();
+    const t    = ev.touches[0];
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    if (!this.isEventOverCanvas(t, rect)) return;
+    this.startDraw(t.clientX, t.clientY, rect);
+  }
+  private onDocTouchMove(ev: TouchEvent) {
+    ev.preventDefault();
+    if (!this.drawing) return;
+    const t    = ev.touches[0];
+    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+    this.drawAndToggle(t.clientX, t.clientY, rect, '#27ae60');
+  }
+  private onDocTouchEnd(_: TouchEvent) {
+    this.endDraw();
+  }
+
+  // — Helpers
+  private startDraw(x: number, y: number, rect: DOMRect) {
     this.drawing = true;
-    this.lastX = e.clientX - rect.left;
-    this.lastY = e.clientY - rect.top;
+    this.lastX   = x - rect.left;
+    this.lastY   = y - rect.top;
     this.ctx.beginPath();
     this.ctx.moveTo(this.lastX, this.lastY);
   }
-
-  private onDocumentMouseMove(e: MouseEvent): void {
-    if (!this.drawing) return;
-    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    if (!this.isEventOverCanvas(e, rect)) return;
-
-    const x   = e.clientX - rect.left;
-    const y   = e.clientY - rect.top;
-    const row = Math.floor(y / this.rowHeight);
-    const col = Math.floor(x / this.stepWidth);
-    const sample = this.samples[row];
-
-    if (sample && !this.grid[sample.key][col]) {
-      this.grid[sample.key][col] = true;
-      this.playSound(sample.key);
+  private drawAndToggle(x: number, y: number, rect: DOMRect, color: string) {
+    const cx = x - rect.left;
+    const cy = y - rect.top;
+    const row = Math.floor(cy / this.rowHeight);
+    const col = Math.floor(cx / this.stepWidth);
+    if (row >= 0 && row < this.samples.length && col >=0 && col < this.sequenceLength) {
+      const key = this.samples[row].key;
+      if (!this.grid[key][col]) {
+        this.grid[key][col] = true;
+        this.playSound(key);
+      }
     }
-
-    this.ctx.lineTo(x, y);
-    this.ctx.strokeStyle = '#27ae60';
+    this.ctx.lineTo(cx, cy);
+    this.ctx.strokeStyle = color;
     this.ctx.lineWidth   = 5;
     this.ctx.stroke();
-    this.lastX = x;
-    this.lastY = y;
+    this.lastX = cx;
+    this.lastY = cy;
+  }
+  private endDraw() {
+    if (this.drawing) {
+      this.drawing = false;
+      this.ctx.closePath();
+    }
   }
 
-  private onDocumentMouseUp(_: MouseEvent): void {
-    if (!this.drawing) return;
-    this.drawing = false;
-    this.ctx.closePath();
+  loadSounds() {
+    this.samples.forEach(s => { this.violinSounds[s.key] = new Audio(s.path); });
+  }
+  initializeGrid() {
+    this.samples.forEach(s => { this.grid[s.key] = new Array(this.sequenceLength).fill(false); });
   }
 
-  loadSounds(): void {
-    this.samples.forEach(s => {
-      this.violinSounds[s.key] = new Audio(s.path);
-    });
-  }
-
-  initializeGrid(): void {
-    this.samples.forEach(s => {
-      this.grid[s.key] = new Array(this.sequenceLength).fill(false);
-    });
-  }
-
-  toggleStep(key: string, i: number): void {
+  toggleStep(key: string, i: number) {
     this.grid[key][i] = !this.grid[key][i];
     if (this.grid[key][i]) this.playSound(key);
   }
-
-  playSound(key: string): void {
-    const snd = this.violinSounds[key];
-    if (!snd) return;
-    snd.currentTime = 0;
-    snd.play();
+  playSound(key: string) {
+    const snd = this.violinSounds[key]; if (snd) { snd.currentTime = 0; snd.play(); }
   }
-
-  playCurrentStep(): void {
-    this.samples.forEach(s => {
-      if (this.grid[s.key][this.currentStep]) {
-        this.playSound(s.key);
-      }
-    });
+  playCurrentStep() {
+    this.samples.forEach(s => { if (this.grid[s.key][this.currentStep]) this.playSound(s.key); });
   }
 }

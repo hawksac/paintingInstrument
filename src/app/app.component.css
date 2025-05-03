@@ -59,9 +59,9 @@
 }
 
 .instrument-button.drums     { background: #e74c3c; }
-.instrument-button.piano     { background: #8e44ad; }
+.instrument-button.piano     { background: #1411dd; }
 .instrument-button.violin    { background: #27ae60; }
-.instrument-button.hawksrule { background: #3498db; }
+.instrument-button.hawksrule { background: #c913ba; }
 .instrument-button.arp       { background: #f39c12; }
 
 .playback {
